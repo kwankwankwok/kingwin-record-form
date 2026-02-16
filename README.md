@@ -3,7 +3,7 @@
 A minimal React form that submits data to a Google Sheet via an Apps Script Web App. Mobile-first, responsive.
 
 - **Local dev**: The form POSTs to `/api/sheet`; Vite proxies that to your Google Apps Script.
-- **Production (GitHub Pages)**: The form POSTs directly to your Apps Script URL. The script must send [CORS headers](https://iith.dev/blog/app-script-cors/) and handle the OPTIONS preflight so the browser allows the response.
+- **Production (GitHub Pages)**: The form POSTs directly to your Apps Script URL with `Content-Type: text/plain` so the browser does not send a preflight (OPTIONS). The script must send [CORS headers](https://iith.dev/blog/app-script-cors/) on the response so the browser allows it.
 
 ## Setup
 
@@ -17,7 +17,7 @@ yarn dev
 ### 2. Google Sheet + Apps Script
 
 1. Open your Google Sheet → **Extensions** → **Apps Script**.
-2. Replace the script with the following. It uses CORS headers and `doOptions()` for preflight so your deployed site (e.g. GitHub Pages) can call it without CORS errors:
+2. Replace the script with the following. It adds CORS headers to the response so your deployed site (e.g. GitHub Pages) can read it. The form sends the body as `text/plain` so no OPTIONS preflight is sent; the script still receives the JSON string in `e.postData.contents`.
 
 ```js
 var CORS_HEADERS = {

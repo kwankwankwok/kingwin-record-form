@@ -284,9 +284,10 @@ export default function Form() {
     setSubmitting(true);
     setStatus(null);
 
+    // Use text/plain to avoid CORS preflight (OPTIONS). Apps Script still receives body in e.postData.contents.
     fetch(SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
