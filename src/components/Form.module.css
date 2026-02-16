@@ -1,0 +1,239 @@
+.wrapper {
+  min-height: 100vh;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.form {
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.roomToggle {
+  display: flex;
+  border: 2px solid #0066cc;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e0e7ff;
+}
+
+.roomTab,
+.roomTabActive {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.roomTab {
+  background: transparent;
+  color: #4b5563;
+}
+
+.roomTab:hover {
+  background: #c7d2fe;
+  color: #1e3a8a;
+}
+
+.roomTabActive {
+  background: #0066cc;
+  color: #fff;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+.input[readonly] {
+  background: #f3f4f6;
+  color: #374151;
+  cursor: default;
+}
+
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.timeRow .input {
+  width: auto;
+  min-width: 4rem;
+}
+
+.timeSeparator {
+  font-weight: 600;
+  color: #374151;
+}
+
+.timeSuffix {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.percentageDiscountRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 44px;
+}
+
+.percentageDiscountSelect {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.percentageDiscountSelect:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+.percentageDiscountInput {
+  width: 5rem;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.percentageDiscountInput:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+textarea.input {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.error {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-radius: 6px;
+}
+
+.success {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: #166534;
+  background: #f0fdf4;
+  border-radius: 6px;
+}
+
+.formActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.formActions .button,
+.formActions .buttonSecondary {
+  flex: 1;
+  min-width: 0;
+}
+
+.button {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+  background: #0066cc;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.buttonSecondary {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.buttonSecondary:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+@media (min-width: 600px) {
+  .wrapper {
+    padding: 2rem;
+    align-items: center;
+  }
+
+  .form {
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+}
