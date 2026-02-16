@@ -285,6 +285,9 @@ export default function Form() {
     setStatus(null);
 
     const body = { ...payload, roomType };
+    if (body.percentageDiscount === 0) {
+      body.percentageDiscount = "";
+    }
     fetch(SCRIPT_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
