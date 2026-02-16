@@ -17,13 +17,19 @@ yarn dev
 ### 2. Google Sheet + Apps Script
 
 1. Open your Google Sheet → **Extensions** → **Apps Script**.
-2. Replace the script with the following. `ContentService.createTextOutput()` does not support `setHeaders()`, so responses are plain JSON without CORS headers.
+2. **Script properties** (access control): **Project Settings** (gear) → **Script properties** → **Add script property**: name `ACCESS_CODE`, value = your secret code. Only people who enter this code in the form can submit.
+3. Replace the script with the following (`ContentService` does not support `setHeaders()`, so responses are plain JSON):
 
 ```js
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    var sheetName = data.roomType === 'large' ? '敬運收入' : '敬運30收入';
+    var validCode = PropertiesService.getScriptProperties().getProperty('ACCESS_CODE');
+    if (!validCode || data.accessCode !== validCode) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Invalid access code' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    var sheetName = (data.roomType === 'large' || data.roomType === 'big') ? '敬運收入' : '敬運30收入';
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) {
@@ -47,6 +53,24 @@ function doPost(e) {
       data.remark || '',
     ];
     sheet.appendRow(row);
+    var lastRow = sheet.getLastRow();
+    var numCols = row.length;
+    var templateRow = 2;
+    sheet.getRange(templateRow, 1, templateRow, numCols).copyTo(
+      sheet.getRange(lastRow, 1, lastRow, numCols),
+      SpreadsheetApp.CopyPasteType.PASTE_FORMAT,
+      false
+    );
+    var percentageDiscountCol = 11;
+    var validation = sheet.getRange(templateRow, percentageDiscountCol).getDataValidation();
+    if (validation != null) {
+      sheet.getRange(lastRow, percentageDiscountCol).setDataValidation(validation);
+    }
+    var depositReturnedCol = 13;
+    var validationDeposit = sheet.getRange(templateRow, depositReturnedCol).getDataValidation();
+    if (validationDeposit != null) {
+      sheet.getRange(lastRow, depositReturnedCol).setDataValidation(validationDeposit);
+    }
     return ContentService.createTextOutput(JSON.stringify({ success: true }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
@@ -56,14 +80,14 @@ function doPost(e) {
 }
 ```
 
-3. **Deploy** → **New deployment** → **Web app** → Execute as **Me**, **Who has access** = **Anyone** (not "Anyone with a Google account"), or you’ll get **401 Unauthorized**. → **Deploy**. Copy the Web app URL.
-4. In the project root create `.env`:
+4. **Deploy** → **New deployment** → **Web app** → Execute as **Me**, **Who has access** = **Anyone** (not "Anyone with a Google account"), or you’ll get **401 Unauthorized**. → **Deploy**. Copy the Web app URL.
+5. In the project root create `.env`:
 
 ```
 VITE_GOOGLE_SCRIPT_URL=https://script.google.com/macros/s/.../exec
 ```
 
-5. Restart `yarn dev` and submit the form.
+6. Restart `yarn dev` and submit the form (enter the access code you set in step 2).
 
 ## Deploy (GitHub Pages)
 

@@ -200,6 +200,7 @@ export default function Form() {
     useState(false);
   const [status, setStatus] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [accessCode, setAccessCode] = useState("");
 
   function handleChange(id, value) {
     setFormData((prev) => {
@@ -238,6 +239,10 @@ export default function Form() {
     e.preventDefault();
     if (!SCRIPT_URL) {
       setStatus({ type: "error", message: "Missing VITE_GOOGLE_SCRIPT_URL" });
+      return;
+    }
+    if (!accessCode || !accessCode.trim()) {
+      setStatus({ type: "error", message: "Access code is required" });
       return;
     }
     const payload = { ...formData };
@@ -284,7 +289,7 @@ export default function Form() {
     setSubmitting(true);
     setStatus(null);
 
-    const body = { ...payload, roomType };
+    const body = { ...payload, roomType, accessCode: accessCode.trim() };
     if (body.percentageDiscount === 0) {
       body.percentageDiscount = "";
     }
@@ -294,8 +299,13 @@ export default function Form() {
       body: JSON.stringify(body),
     })
       .then((res) => {
-        if (!res.ok) throw new Error(res.statusText || "Request failed");
-        return res.json().catch(() => ({}));
+        return res.json().catch(() => ({})).then((result) => {
+          if (!res.ok) throw new Error(result.error || res.statusText || "Request failed");
+          if (result && result.success === false) {
+            throw new Error(result.error || "Request failed");
+          }
+          return result;
+        });
       })
       .then(() => {
         setStatus({ type: "success", message: "Submitted successfully" });
@@ -345,6 +355,23 @@ export default function Form() {
   return (
     <div className={styles.wrapper}>
       <form className={styles.form} onSubmit={handleSubmit}>
+        <div className={styles.field}>
+          <label htmlFor="accessCode" className={styles.label}>
+            Access code *
+          </label>
+          <input
+            id="accessCode"
+            type="password"
+            className={styles.input}
+            value={accessCode}
+            onChange={(e) => {
+              setAccessCode(e.target.value);
+              setStatus(null);
+            }}
+            autoComplete="off"
+            required
+          />
+        </div>
         <div className={styles.roomToggle} role='tablist' aria-label='房間'>
           <button
             type='button'
