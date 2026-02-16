@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FORM_FIELDS } from "../config/fields.js";
 import styles from "./Form.module.css";
 
-// Dev: same-origin /api/sheet (Vite proxy). Production: direct Apps Script URL (script must send CORS headers).
+// Dev: same-origin /api/sheet (Vite proxy). Production: direct Apps Script URL.
 const base = (import.meta.env.BASE_URL || "/").replace(/\/?$/, "/");
 const SCRIPT_URL = import.meta.env.DEV
   ? base + "api/sheet"
@@ -284,7 +284,6 @@ export default function Form() {
     setSubmitting(true);
     setStatus(null);
 
-    // Use text/plain to avoid CORS preflight (OPTIONS). Apps Script still receives body in e.postData.contents.
     fetch(SCRIPT_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },

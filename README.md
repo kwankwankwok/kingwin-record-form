@@ -3,7 +3,7 @@
 A minimal React form that submits data to a Google Sheet via an Apps Script Web App. Mobile-first, responsive.
 
 - **Local dev**: The form POSTs to `/api/sheet`; Vite proxies that to your Google Apps Script.
-- **Production (GitHub Pages)**: The form POSTs directly to your Apps Script URL with `Content-Type: text/plain` so the browser does not send a preflight (OPTIONS). The script must send [CORS headers](https://iith.dev/blog/app-script-cors/) on the response so the browser allows it.
+- **Production (GitHub Pages)**: The form POSTs to your Apps Script URL. Apps Script’s `ContentService` does not support `setHeaders()`, so CORS cannot be set in the script; for cross-origin requests you’ll need a same-origin proxy or the iframe form-POST approach.
 
 ## Setup
 
@@ -17,15 +17,9 @@ yarn dev
 ### 2. Google Sheet + Apps Script
 
 1. Open your Google Sheet → **Extensions** → **Apps Script**.
-2. Replace the script with the following. It adds CORS headers to the response so your deployed site (e.g. GitHub Pages) can read it. The form sends the body as `text/plain` so no OPTIONS preflight is sent; the script still receives the JSON string in `e.postData.contents`.
+2. Replace the script with the following. `ContentService.createTextOutput()` does not support `setHeaders()`, so responses are plain JSON without CORS headers.
 
 ```js
-var CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
-
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
@@ -49,19 +43,11 @@ function doPost(e) {
     ];
     sheet.appendRow(row);
     return ContentService.createTextOutput(JSON.stringify({ success: true }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(CORS_HEADERS);
+      .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(CORS_HEADERS);
+      .setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-function doOptions() {
-  return ContentService.createTextOutput("")
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeaders(CORS_HEADERS);
 }
 ```
 
@@ -79,7 +65,7 @@ VITE_GOOGLE_SCRIPT_URL=https://script.google.com/macros/s/.../exec
 1. Push this repo to GitHub and ensure the **Deploy to GitHub Pages** workflow runs on `main`.
 2. In the repo: **Settings** → **Pages** → set **Source** to **GitHub Actions**.
 3. Add a secret: **Settings** → **Secrets and variables** → **Actions** → **New repository secret** → name **`VITE_GOOGLE_SCRIPT_URL`**, value = your Apps Script Web app URL (same as in `.env`).
-4. After the workflow completes, the site is at `https://<your-username>.github.io/kingwin-record-form/`. The form POSTs directly to your script; with CORS headers and `doOptions()` in place, the browser allows the response.
+4. After the workflow completes, the site is at `https://<your-username>.github.io/kingwin-record-form/`. Direct `fetch()` from the page to the script will be blocked by CORS (no `setHeaders()` in Apps Script); use a same-origin proxy or the iframe form-POST approach if you need the form to work from GitHub Pages.
 
 ## Commands
 
