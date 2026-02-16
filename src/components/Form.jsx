@@ -284,10 +284,11 @@ export default function Form() {
     setSubmitting(true);
     setStatus(null);
 
+    const body = { ...payload, roomType };
     fetch(SCRIPT_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     })
       .then((res) => {
         if (!res.ok) throw new Error(res.statusText || "Request failed");

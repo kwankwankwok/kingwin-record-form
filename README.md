@@ -23,7 +23,12 @@ yarn dev
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var sheetName = data.roomType === 'large' ? '敬運收入' : '敬運30收入';
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) {
+      throw new Error('Sheet "' + sheetName + '" not found');
+    }
     const row = [
       data.date || '',
       data.startTime || '',
