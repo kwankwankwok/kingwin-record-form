@@ -36,7 +36,8 @@ function doPost(e) {
 }
 ```
 
-3. **Deploy** → **New deployment** → **Web app** → Execute as **Me**, Who has access **Anyone** → **Deploy**. Copy the Web app URL.
+3. **Deploy** → **New deployment** → **Web app** → Execute as **Me**, Who has access **Anyone** → **Deploy**. Copy the Web app URL.  
+   (The form sends the body as `text/plain` so cross-origin requests from GitHub Pages aren’t blocked by CORS; your script still receives JSON in `e.postData.contents`.)
 4. In the project root create `.env`:
 
 ```

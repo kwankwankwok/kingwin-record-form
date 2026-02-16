@@ -191,9 +191,10 @@ export default function Form() {
     }
     setSubmitting(true);
     setStatus(null);
+    // Use text/plain to avoid CORS preflight (Apps Script doesn't return CORS headers for OPTIONS)
     fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload),
     })
       .then((res) => {
