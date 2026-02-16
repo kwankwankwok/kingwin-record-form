@@ -1,197 +1,26 @@
 import { useState } from "react";
 import { FORM_FIELDS } from "../config/fields.js";
+import {
+  HOURS_24,
+  MINUTES_5,
+  PERCENTAGE_DISCOUNT_OPTIONS,
+  PRESET_PERCENTAGES,
+  TOTAL_FORMULA_FIELDS,
+  parseTime,
+  computeNoOfHrs,
+  computeAmount,
+  computeTotal,
+  getInitialState,
+  buildSubmitBody,
+  validateSubmitBody,
+} from "../lib/formLogic.js";
+import { submitToSheet } from "../lib/submitSheet.js";
 import styles from "./Form.module.css";
 
-// Dev: same-origin /api/sheet (Vite proxy). Production: direct Apps Script URL.
 const base = (import.meta.env.BASE_URL || "/").replace(/\/?$/, "/");
 const SCRIPT_URL = import.meta.env.DEV
   ? base + "api/sheet"
   : import.meta.env.VITE_GOOGLE_SCRIPT_URL;
-
-const HOURS_24 = Array.from({ length: 24 }, (_, i) =>
-  i.toString().padStart(2, "0"),
-);
-const MINUTES_5 = [
-  "00",
-  "30",
-  "05",
-  "10",
-  "15",
-  "20",
-  "25",
-  "35",
-  "40",
-  "45",
-  "50",
-  "55",
-];
-
-const PERCENTAGE_DISCOUNT_OPTIONS = [
-  { value: 0, label: "無" },
-  { value: 5, label: "95折" },
-  { value: 10, label: "9折" },
-  { value: 15, label: "85折" },
-  { value: "other", label: "其他" },
-];
-
-const PRESET_PERCENTAGES = [0, 5, 10, 15];
-
-const TOTAL_FORMULA_FIELDS = [
-  "amount",
-  "overtime",
-  "extendHr",
-  "percentageDiscount",
-  "otherDiscount",
-];
-
-const AMOUNT_PRICE_SMALL = Object.freeze({
-  BASE_2_PPL_MON_THU: 110,
-  BASE_2_PPL_FRI_SUN: 140,
-  BASE_3_PPL_UP_MON_THU: 100,
-  BASE_3_PPL_UP_FRI_SUN: 130,
-  EXTRA_HOUR_PER_PERSON_MON_THU: 20,
-  EXTRA_HOUR_PER_PERSON_FRI_SUN: 25,
-  INCLUDED_HOURS: 4,
-});
-
-const AMOUNT_PRICE_LARGE = Object.freeze({
-  BASE_MON_THU: 130,
-  BASE_FRI_SUN: 150,
-  EXTRA_HOUR_PER_PERSON_MON_THU: 20,
-  EXTRA_HOUR_PER_PERSON_FRI_SUN: 25,
-  INCLUDED_HOURS: 4,
-});
-
-function parseTime(value) {
-  if (!value || typeof value !== "string") return { hour: "", minute: "" };
-  const [hour, minute] = value.trim().split(":");
-  const h = hour?.length === 2 ? hour : "";
-  const minNum = parseInt(minute, 10);
-  const snapped = Number.isNaN(minNum)
-    ? ""
-    : ((Math.round(minNum / 5) * 5) % 60).toString().padStart(2, "0");
-  return { hour: h, minute: snapped };
-}
-
-function computeNoOfHrs(startTime, endTime) {
-  if (
-    !startTime ||
-    !endTime ||
-    typeof startTime !== "string" ||
-    typeof endTime !== "string"
-  )
-    return null;
-  const [sh, sm] = startTime.trim().split(":").map(Number);
-  const [eh, em] = endTime.trim().split(":").map(Number);
-  if (
-    Number.isNaN(sh) ||
-    Number.isNaN(sm) ||
-    Number.isNaN(eh) ||
-    Number.isNaN(em)
-  )
-    return null;
-  const startMins = sh * 60 + sm;
-  let endMins = eh * 60 + em;
-  if (endMins <= startMins) endMins += 24 * 60;
-  return Math.round((endMins - startMins) / 60);
-}
-
-function computeAmount(date, noOfPpl, noOfHrs, roomType = "small") {
-  if (!date || typeof date !== "string" || date.trim() === "") return null;
-  const d = new Date(date.trim() + "T12:00:00");
-  if (Number.isNaN(d.getTime())) return null;
-  const day = d.getDay();
-  const ppl = Number(noOfPpl) || 0;
-  const hrs = Number(noOfHrs) || 0;
-  if (ppl < 1 || hrs < 0) return null;
-  const isMonThu = day >= 1 && day <= 4;
-  let basePrice;
-  let extraPerHourPerPerson;
-  const includedHours =
-    roomType === "large"
-      ? AMOUNT_PRICE_LARGE.INCLUDED_HOURS
-      : AMOUNT_PRICE_SMALL.INCLUDED_HOURS;
-  if (roomType === "large") {
-    basePrice = isMonThu
-      ? AMOUNT_PRICE_LARGE.BASE_MON_THU
-      : AMOUNT_PRICE_LARGE.BASE_FRI_SUN;
-    extraPerHourPerPerson = isMonThu
-      ? AMOUNT_PRICE_LARGE.EXTRA_HOUR_PER_PERSON_MON_THU
-      : AMOUNT_PRICE_LARGE.EXTRA_HOUR_PER_PERSON_FRI_SUN;
-  } else {
-    if (ppl >= 3) {
-      basePrice = isMonThu
-        ? AMOUNT_PRICE_SMALL.BASE_3_PPL_UP_MON_THU
-        : AMOUNT_PRICE_SMALL.BASE_3_PPL_UP_FRI_SUN;
-      extraPerHourPerPerson = isMonThu
-        ? AMOUNT_PRICE_SMALL.EXTRA_HOUR_PER_PERSON_MON_THU
-        : AMOUNT_PRICE_SMALL.EXTRA_HOUR_PER_PERSON_FRI_SUN;
-    } else {
-      basePrice = isMonThu
-        ? AMOUNT_PRICE_SMALL.BASE_2_PPL_MON_THU
-        : AMOUNT_PRICE_SMALL.BASE_2_PPL_FRI_SUN;
-      extraPerHourPerPerson = isMonThu
-        ? AMOUNT_PRICE_SMALL.EXTRA_HOUR_PER_PERSON_MON_THU
-        : AMOUNT_PRICE_SMALL.EXTRA_HOUR_PER_PERSON_FRI_SUN;
-    }
-  }
-  const extraHours = Math.max(0, hrs - includedHours);
-  const amount = ppl * (basePrice + extraHours * extraPerHourPerPerson);
-  return Math.round(amount * 100) / 100;
-}
-
-function computeTotal(
-  amount,
-  overtime,
-  extendHr,
-  percentageDiscount,
-  otherDiscount,
-) {
-  const a = Number(amount) || 0;
-  const o = Number(overtime) || 0;
-  const e = Number(extendHr) || 0;
-  const pct = Number(percentageDiscount) || 0;
-  const other = Number(otherDiscount) || 0;
-  const discountedAmount = a * (1 - pct / 100);
-  const total = discountedAmount + o + e - other;
-  return Math.round(total * 100) / 100;
-}
-
-function getTodayDateString() {
-  const d = new Date();
-  return (
-    d.getFullYear() +
-    "-" +
-    String(d.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(d.getDate()).padStart(2, "0")
-  );
-}
-
-function getInitialState() {
-  const state = FORM_FIELDS.reduce((acc, { id, type, defaultZero }) => {
-    if (type === "checkbox") return { ...acc, [id]: false };
-    if (id === "deposit") return { ...acc, [id]: 500 };
-    if (id === "percentageDiscount") return { ...acc, [id]: 0 };
-    if (id === "date") return { ...acc, [id]: getTodayDateString() };
-    if (id === "startTime") return { ...acc, [id]: "12:00" };
-    if (id === "endTime") return { ...acc, [id]: "16:00" };
-    if (defaultZero) return { ...acc, [id]: 0 };
-    return { ...acc, [id]: "" };
-  }, {});
-  const noOfHrs = computeNoOfHrs(state.startTime, state.endTime);
-  if (noOfHrs !== null) state.noOfHrs = noOfHrs;
-  const amount = computeAmount(state.date, state.noOfPpl, state.noOfHrs);
-  if (amount !== null) state.amount = amount;
-  state.total = computeTotal(
-    state.amount,
-    state.overtime,
-    state.extendHr,
-    state.percentageDiscount,
-    state.otherDiscount,
-  );
-  return state;
-}
 
 export default function Form() {
   const [formData, setFormData] = useState(getInitialState);
@@ -235,7 +64,7 @@ export default function Form() {
     setStatus(null);
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!SCRIPT_URL) {
       setStatus({ type: "error", message: "Missing VITE_GOOGLE_SCRIPT_URL" });
@@ -245,80 +74,27 @@ export default function Form() {
       setStatus({ type: "error", message: "Access code is required" });
       return;
     }
-    const payload = { ...formData };
-    FORM_FIELDS.forEach(({ id, defaultZero, type }) => {
-      if (
-        defaultZero &&
-        (payload[id] === "" ||
-          payload[id] === undefined ||
-          payload[id] === null)
-      )
-        payload[id] = 0;
-      if (type === "checkbox") payload[id] = Boolean(payload[id]);
-    });
-    if (
-      payload.percentageDiscount === "" ||
-      payload.percentageDiscount === undefined ||
-      payload.percentageDiscount === null
-    ) {
-      payload.percentageDiscount = 0;
-    } else {
-      payload.percentageDiscount = Number(payload.percentageDiscount);
-    }
-    const numericField = FORM_FIELDS.find(
-      (f) => f.type === "number" && Number(payload[f.id]) < 0,
-    );
-    if (numericField) {
-      setStatus({
-        type: "error",
-        message: `${numericField.label} cannot be negative`,
-      });
-      return;
-    }
-    const required = FORM_FIELDS.filter((f) => f.required);
-    const missing = required.find((f) => {
-      const val = payload[f.id];
-      if (f.defaultZero && (val === "" || val === undefined || val === null))
-        return false;
-      return !String(val).trim();
-    });
-    if (missing) {
-      setStatus({ type: "error", message: `${missing.label} is required` });
+    const body = buildSubmitBody(formData, roomType, accessCode);
+    const validation = validateSubmitBody(body);
+    if (!validation.ok) {
+      setStatus({ type: "error", message: validation.message });
       return;
     }
     setSubmitting(true);
     setStatus(null);
-
-    const body = { ...payload, roomType, accessCode: accessCode.trim() };
-    if (body.percentageDiscount === 0) {
-      body.percentageDiscount = "";
+    try {
+      await submitToSheet(SCRIPT_URL, body);
+      setStatus({ type: "success", message: "Submitted successfully" });
+      setFormData(getInitialState());
+      setPercentageDiscountIsOther(false);
+    } catch (err) {
+      setStatus({
+        type: "error",
+        message: err.message || "Something went wrong",
+      });
+    } finally {
+      setSubmitting(false);
     }
-    fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(body),
-    })
-      .then((res) => {
-        return res.json().catch(() => ({})).then((result) => {
-          if (!res.ok) throw new Error(result.error || res.statusText || "Request failed");
-          if (result && result.success === false) {
-            throw new Error(result.error || "Request failed");
-          }
-          return result;
-        });
-      })
-      .then(() => {
-        setStatus({ type: "success", message: "Submitted successfully" });
-        setFormData(getInitialState());
-        setPercentageDiscountIsOther(false);
-      })
-      .catch((err) => {
-        setStatus({
-          type: "error",
-          message: err.message || "Something went wrong",
-        });
-      })
-      .finally(() => setSubmitting(false));
   }
 
   function handleClear(e) {
