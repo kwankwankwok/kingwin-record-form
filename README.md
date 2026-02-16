@@ -45,6 +45,13 @@ VITE_GOOGLE_SCRIPT_URL=https://script.google.com/macros/s/.../exec
 
 5. Restart `yarn dev` and submit the form.
 
+## Deploy (GitHub Pages)
+
+1. Push this repo to GitHub and ensure the **Deploy to GitHub Pages** workflow runs on `main`.
+2. In the repo: **Settings** → **Pages** → under "Build and deployment", set **Source** to **GitHub Actions**.
+3. Add your Apps Script URL as a secret: **Settings** → **Secrets and variables** → **Actions** → **New repository secret** → name `VITE_GOOGLE_SCRIPT_URL`, value = your Web app URL (same as in `.env`).
+4. After the workflow completes, the site is at `https://<your-username>.github.io/kingwin-record-form/`.
+
 ## Commands
 
 - `yarn dev` – dev server
