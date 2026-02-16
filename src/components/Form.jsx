@@ -2,8 +2,10 @@ import { useState } from "react";
 import { FORM_FIELDS } from "../config/fields.js";
 import styles from "./Form.module.css";
 
+// Dev: same-origin /api/sheet (Vite proxy). Production: direct Apps Script URL (script must send CORS headers).
+const base = (import.meta.env.BASE_URL || "/").replace(/\/?$/, "/");
 const SCRIPT_URL = import.meta.env.DEV
-  ? "/api/sheet"
+  ? base + "api/sheet"
   : import.meta.env.VITE_GOOGLE_SCRIPT_URL;
 
 const HOURS_24 = Array.from({ length: 24 }, (_, i) =>
@@ -281,10 +283,10 @@ export default function Form() {
     }
     setSubmitting(true);
     setStatus(null);
-    // Use text/plain to avoid CORS preflight (Apps Script doesn't return CORS headers for OPTIONS)
+
     fetch(SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {

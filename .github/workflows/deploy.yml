@@ -31,7 +31,6 @@ jobs:
 
       - name: Build
         env:
-          # Add VITE_GOOGLE_SCRIPT_URL in repo Settings → Secrets and variables → Actions
           VITE_GOOGLE_SCRIPT_URL: ${{ secrets.VITE_GOOGLE_SCRIPT_URL }}
           NODE_ENV: production
         run: yarn build
