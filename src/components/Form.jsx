@@ -7,7 +7,7 @@ const SCRIPT_URL = import.meta.env.DEV
   : import.meta.env.VITE_GOOGLE_SCRIPT_URL;
 
 const HOURS_24 = Array.from({ length: 24 }, (_, i) =>
-  i.toString().padStart(2, "0")
+  i.toString().padStart(2, "0"),
 );
 const MINUTES_5 = [
   "00",
@@ -143,7 +143,7 @@ function computeTotal(
   overtime,
   extendHr,
   percentageDiscount,
-  otherDiscount
+  otherDiscount,
 ) {
   const a = Number(amount) || 0;
   const o = Number(overtime) || 0;
@@ -186,7 +186,7 @@ function getInitialState() {
     state.overtime,
     state.extendHr,
     state.percentageDiscount,
-    state.otherDiscount
+    state.otherDiscount,
   );
   return state;
 }
@@ -211,7 +211,7 @@ export default function Form() {
           next.date,
           next.noOfPpl,
           next.noOfHrs,
-          roomType
+          roomType,
         );
         if (amount !== null) next.amount = amount;
       }
@@ -224,7 +224,7 @@ export default function Form() {
           next.overtime,
           next.extendHr,
           next.percentageDiscount,
-          next.otherDiscount
+          next.otherDiscount,
         );
       }
       return next;
@@ -259,7 +259,7 @@ export default function Form() {
       payload.percentageDiscount = Number(payload.percentageDiscount);
     }
     const numericField = FORM_FIELDS.find(
-      (f) => f.type === "number" && Number(payload[f.id]) < 0
+      (f) => f.type === "number" && Number(payload[f.id]) < 0,
     );
     if (numericField) {
       setStatus({
@@ -321,7 +321,7 @@ export default function Form() {
         prev.date,
         prev.noOfPpl,
         prev.noOfHrs,
-        newRoomType
+        newRoomType,
       );
       if (amount !== null) next.amount = amount;
       next.total = computeTotal(
@@ -329,7 +329,7 @@ export default function Form() {
         next.overtime,
         next.extendHr,
         next.percentageDiscount,
-        next.otherDiscount
+        next.otherDiscount,
       );
       return next;
     });
@@ -339,10 +339,10 @@ export default function Form() {
   return (
     <div className={styles.wrapper}>
       <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.roomToggle} role="tablist" aria-label="房間">
+        <div className={styles.roomToggle} role='tablist' aria-label='房間'>
           <button
-            type="button"
-            role="tab"
+            type='button'
+            role='tab'
             aria-selected={roomType === "small"}
             className={
               roomType === "small" ? styles.roomTabActive : styles.roomTab
@@ -352,8 +352,8 @@ export default function Form() {
             細房
           </button>
           <button
-            type="button"
-            role="tab"
+            type='button'
+            role='tab'
             aria-selected={roomType === "large"}
             className={
               roomType === "large" ? styles.roomTabActive : styles.roomTab
@@ -382,7 +382,7 @@ export default function Form() {
               ) : type === "checkbox" ? (
                 <input
                   id={id}
-                  type="checkbox"
+                  type='checkbox'
                   className={styles.input}
                   checked={Boolean(formData[id])}
                   onChange={(e) => handleChange(id, e.target.checked)}
@@ -398,13 +398,13 @@ export default function Form() {
                       const hour = e.target.value;
                       handleChange(
                         id,
-                        hour && minute ? `${hour}:${minute}` : hour
+                        hour && minute ? `${hour}:${minute}` : hour,
                       );
                     }}
                     required={required}
                     aria-label={`${label} hour`}
                   >
-                    <option value="">--</option>
+                    <option value=''>--</option>
                     {HOURS_24.map((h) => (
                       <option key={h} value={h}>
                         {h}
@@ -420,13 +420,13 @@ export default function Form() {
                       const minute = e.target.value;
                       handleChange(
                         id,
-                        hour && minute ? `${hour}:${minute}` : minute
+                        hour && minute ? `${hour}:${minute}` : minute,
                       );
                     }}
                     required={required}
                     aria-label={`${label} minute`}
                   >
-                    <option value="">--</option>
+                    <option value=''>--</option>
                     {MINUTES_5.map((m) => (
                       <option key={m} value={m}>
                         {m}
@@ -438,7 +438,7 @@ export default function Form() {
               ) : id === "noOfHrs" ? (
                 <input
                   id={id}
-                  type="number"
+                  type='number'
                   className={styles.input}
                   value={formData[id]}
                   readOnly
@@ -449,13 +449,13 @@ export default function Form() {
               ) : id === "total" ? (
                 <input
                   id={id}
-                  type="number"
+                  type='number'
                   className={styles.input}
                   value={formData[id]}
                   onChange={(e) =>
                     handleChange(
                       id,
-                      e.target.value === "" ? "" : Number(e.target.value)
+                      e.target.value === "" ? "" : Number(e.target.value),
                     )
                   }
                   min={0}
@@ -477,7 +477,7 @@ export default function Form() {
                           id,
                           PRESET_PERCENTAGES.includes(Number(current))
                             ? 0
-                            : current
+                            : current,
                         );
                       } else {
                         setPercentageDiscountIsOther(false);
@@ -491,12 +491,12 @@ export default function Form() {
                         <option key={value} value={value}>
                           {optLabel}
                         </option>
-                      )
+                      ),
                     )}
                   </select>
                   {percentageDiscountIsOther && (
                     <input
-                      type="number"
+                      type='number'
                       className={styles.percentageDiscountInput}
                       min={0}
                       max={100}
@@ -505,10 +505,10 @@ export default function Form() {
                       onChange={(e) =>
                         handleChange(
                           id,
-                          e.target.value === "" ? "" : Number(e.target.value)
+                          e.target.value === "" ? "" : Number(e.target.value),
                         )
                       }
-                      placeholder="%"
+                      placeholder='%'
                       aria-label={`${label} custom`}
                     />
                   )}
@@ -525,7 +525,7 @@ export default function Form() {
                 />
               )}
             </div>
-          )
+          ),
         )}
         {status && (
           <p
@@ -535,11 +535,11 @@ export default function Form() {
           </p>
         )}
         <div className={styles.formActions}>
-          <button type="submit" className={styles.button} disabled={submitting}>
+          <button type='submit' className={styles.button} disabled={submitting}>
             {submitting ? "Sending…" : "Submit"}
           </button>
           <button
-            type="button"
+            type='button'
             className={styles.buttonSecondary}
             onClick={handleClear}
           >
