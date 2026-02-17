@@ -146,6 +146,18 @@ export function getInitialState() {
   return state;
 }
 
+/**
+ * Format 8-digit HK phone as "XXXX XXXX". Otherwise return original value.
+ */
+function formatPhoneForSheet(value) {
+  if (value === undefined || value === null) return value;
+  const s = String(value).trim();
+  if (s === "") return s;
+  const digits = s.replace(/\D/g, "");
+  if (digits.length === 8) return digits.slice(0, 4) + " " + digits.slice(4);
+  return s;
+}
+
 /** Normalize formData into payload and build body for submit. */
 export function buildSubmitBody(formData, roomType, accessCode) {
   const payload = { ...formData };
@@ -164,6 +176,7 @@ export function buildSubmitBody(formData, roomType, accessCode) {
   }
   const body = { ...payload, roomType, accessCode: accessCode.trim() };
   if (body.percentageDiscount === 0) body.percentageDiscount = "";
+  body.phoneNumber = formatPhoneForSheet(body.phoneNumber);
   return body;
 }
 
