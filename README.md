@@ -87,8 +87,28 @@ function doPost(e) {
     ];
     var numCols = row.length;
     var lastRow = sheet.getLastRow();
-    var newDate = normalizeDateForCompare(data.date);
-    var newTime = normalizeTimeForCompare(data.startTime);
+    var newDateStr = normalizeDateForCompare(data.date);
+    var newStart = normalizeTimeForCompare(data.startTime);
+    var newEnd = normalizeTimeForCompare(data.endTime);
+    var newPpl = String(data.noOfPpl ?? '');
+    if (lastRow >= 2) {
+      var dataRows = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+      for (var i = 0; i < dataRows.length; i++) {
+        var r = dataRows[i];
+        var exDate = normalizeDateForCompare(r[0]);
+        var exStart = normalizeTimeForCompare(r[1]);
+        var exEnd = normalizeTimeForCompare(r[2]);
+        var exPpl = String(r[3] ?? '');
+        if (exDate === newDateStr && exStart === newStart && exEnd === newEnd && exPpl === newPpl) {
+          return ContentService.createTextOutput(JSON.stringify({
+            success: false,
+            error: 'Duplicate record (same date, start time, end time, and number of people).'
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+    }
+    var newDate = newDateStr;
+    var newTime = newStart;
     var startRow = Math.max(2, lastRow - 9);
     var existing = sheet.getRange(startRow, 1, lastRow, 2).getValues();
     var insertBeforeRow = lastRow + 1;
@@ -100,8 +120,6 @@ function doPost(e) {
         break;
       }
     }
-    Logger.log('newDate=%s newTime=%s startRow=%s lastRow=%s insertBeforeRow=%s existing=%s',
-      newDate, newTime, startRow, lastRow, insertBeforeRow, JSON.stringify(existing));
     sheet.insertRowBefore(insertBeforeRow);
     sheet.getRange(insertBeforeRow, 1, 1, numCols).setValues([row]);
     var formatSourceRow = (insertBeforeRow === 2) ? 3 : 2;
