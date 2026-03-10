@@ -147,6 +147,27 @@ export function getInitialState() {
 }
 
 /**
+ * Merge parsed booking data (e.g. from paste) into full form state and recompute derived fields.
+ * @param {object} partial - Keys such as date, startTime, endTime, noOfPpl, phoneNumber, etc.
+ * @param {string} [roomType] - "small" or "large" for amount calculation
+ */
+export function mergeBookingData(partial, roomType = "small") {
+  const state = { ...getInitialState(), ...partial };
+  const noOfHrs = computeNoOfHrs(state.startTime, state.endTime);
+  if (noOfHrs !== null) state.noOfHrs = noOfHrs;
+  const amount = computeAmount(state.date, state.noOfPpl, state.noOfHrs, roomType);
+  if (amount !== null) state.amount = amount;
+  state.total = computeTotal(
+    state.amount,
+    state.overtime,
+    state.extendHr,
+    state.percentageDiscount,
+    state.otherDiscount,
+  );
+  return state;
+}
+
+/**
  * Format 8-digit HK phone as "XXXX XXXX". Otherwise return original value.
  */
 function formatPhoneForSheet(value) {

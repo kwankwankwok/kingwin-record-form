@@ -11,6 +11,7 @@ import {
   computeAmount,
   computeTotal,
   getInitialState,
+  mergeBookingData,
   buildSubmitBody,
   validateSubmitBody,
 } from "../lib/formLogic.js";
@@ -22,9 +23,19 @@ const SCRIPT_URL = import.meta.env.DEV
   ? base + "api/sheet"
   : import.meta.env.VITE_GOOGLE_SCRIPT_URL;
 
-export default function Form() {
-  const [formData, setFormData] = useState(getInitialState);
-  const [roomType, setRoomType] = useState("small");
+// initialData: optional prefilled form state from paste recognition
+// eslint-disable-next-line react/prop-types
+export default function Form({ initialData = null }) {
+  const hasPrefill =
+    initialData &&
+    typeof initialData === "object" &&
+    Object.keys(initialData).length > 0;
+  const room = hasPrefill && initialData.roomType === "large" ? "large" : "small";
+
+  const [formData, setFormData] = useState(() =>
+    hasPrefill ? mergeBookingData(initialData, room) : getInitialState(),
+  );
+  const [roomType, setRoomType] = useState(room);
   const [percentageDiscountIsOther, setPercentageDiscountIsOther] =
     useState(false);
   const [status, setStatus] = useState(null);
